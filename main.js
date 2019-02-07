@@ -4973,13 +4973,10 @@ var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var author$project$Main$subscriptions = function (model) {
 	return elm$core$Platform$Sub$none;
 };
-var author$project$Main$dlog = function (model) {
-	return elm$core$Platform$Cmd$none;
-};
 var author$project$Main$GotConversion = function (a) {
 	return {$: 'GotConversion', a: a};
 };
-var author$project$Main$test = F4(
+var author$project$Main$queryBuilder = F4(
 	function (input, isRaw, formatIn, formatOut) {
 		return 'data=' + (input + ('&raw=' + (isRaw + ('&input_format=' + (formatIn + ('&output_format=' + formatOut))))));
 	});
@@ -5858,7 +5855,7 @@ var author$project$Main$getConversion = function (model) {
 			body: A2(
 				elm$http$Http$stringBody,
 				'application/x-www-form-urlencoded',
-				A4(author$project$Main$test, model.inputFieldTextValue, model.raw, model.convertFrom, model.convertTo)),
+				A4(author$project$Main$queryBuilder, model.inputFieldTextValue, model.raw, model.convertFrom, model.convertTo)),
 			expect: elm$http$Http$expectString(author$project$Main$GotConversion),
 			headers: _List_Nil,
 			method: 'POST',
@@ -5884,7 +5881,7 @@ var author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{convertFrom: val}),
-					author$project$Main$dlog(model));
+					elm$core$Platform$Cmd$none);
 			case 'UpdateTo':
 				var val = msg.a;
 				return _Utils_Tuple2(
@@ -5917,13 +5914,13 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{conversionResult: url}),
-						author$project$Main$prettify(url));
+						elm$core$Platform$Cmd$none);
 				} else {
 					var url = result.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{conversionResult: 'FAILURE2'}),
+							{conversionResult: 'FAILURE'}),
 						elm$core$Platform$Cmd$none);
 				}
 			default:

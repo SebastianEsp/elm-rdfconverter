@@ -11,6 +11,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Debug exposing (log)
 
+-- Sends a json encoded string to javascript for formatting
 port prettify : String -> Cmd msg
 
 -- MAIN
@@ -38,13 +39,6 @@ type alias Model =
     raw : String,
     data : String
   }
-
-type alias Config =
-    { indent : Int
-    , columns : Int
-    }
-
-config = { indent = 4, columns = 10 }
 
 init : () -> (Model, Cmd Msg)
 init _ =
@@ -83,15 +77,17 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
 
+    -- Updates the model with result of easyrdf conversion
     DisplayConversionResult -> 
       ({ model | content = model.conversionResult }, getConversion model)
 
     UpdateFrom val ->
-      ({ model | convertFrom = val }, dlog model)
+      ({ model | convertFrom = val }, Cmd.none)
       
     UpdateTo val ->
       ({ model | convertTo = val }, Cmd.none)
 
+    -- Handles the state of the radio buttons, and the associated effects
     RadioMsg state ->
       case state of
         URL ->
@@ -99,14 +95,15 @@ update msg model =
         TEXT ->
           ({ model | radioState = state, inputFieldText = "shown", inputFieldUrl = "hidden"}, Cmd.none)
 
+    -- Fired when a conversion is finnished. If the conversion is successfull update model with result. Else print error message
     GotConversion result ->
       case result of
         Ok url ->
           if model.convertTo == "json" then (model, prettify url)
-          else ({model | conversionResult = url}, prettify url)
+          else ({model | conversionResult = url}, Cmd.none)
 
         Err url ->
-          ({model | conversionResult = "FAILURE2"}, Cmd.none)
+          ({model | conversionResult = "FAILURE"}, Cmd.none)
     
     UpdateInputFieldTextValue val ->
       ({model | inputFieldTextValue = val}, Cmd.none)
@@ -203,39 +200,26 @@ view model =
     ]
   ]
     
-  
+-- Http Post call to the easyrdf converter  
 getConversion : Model -> Cmd Msg
 getConversion model =
   Http.request
     { method = "POST"
     , headers = []
     , url = "http://10.31.128.87:8080/tool/RDFConverter/easyrdf/converter.php"
-    , body = Http.stringBody "application/x-www-form-urlencoded" (test model.inputFieldTextValue model.raw model.convertFrom model.convertTo)
+    , body = Http.stringBody "application/x-www-form-urlencoded" (queryBuilder model.inputFieldTextValue model.raw model.convertFrom model.convertTo)
     , expect = Http.expectString GotConversion
     , timeout = Nothing
     , tracker = Nothing
     }
 
-test : String -> String -> String -> String -> String
-test input isRaw formatIn formatOut =
+-- Constructs an http query string
+queryBuilder : String -> String -> String -> String -> String
+queryBuilder input isRaw formatIn formatOut =
   "data=" ++ input ++ "&raw=" ++ isRaw ++ "&input_format=" ++ formatIn ++ "&output_format=" ++ formatOut
 
-formatJsonResult : String -> String
-formatJsonResult input = 
-  case Json.Print.prettyString config input of
-    Ok val -> val
-    Err val -> "FAILURE"
-
-queryBuilder : String -> String
-queryBuilder input = 
-  B.toQuery
-    [B.string "" "" ,B.string "data" input, B.string "raw" "true", B.string "input_format" "rdfxml", B.string "output_format" "json"]
-    
+-- Prints a message to the console
 dlog : Model -> Cmd Msg
 dlog model =
-  --(log (test model.inputFieldTextValue))
+  (log (model.convertTo))
   Cmd.none
-
-updateConfig : Int -> Config -> Config
-updateConfig indent conf =
-  { conf | indent = indent }
