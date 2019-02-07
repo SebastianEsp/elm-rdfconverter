@@ -1,0 +1,66 @@
+body{
+    width: 80%;
+    margin: auto;
+}
+
+button{
+    width: 100px;
+}
+
+pre{
+    display: block;
+    padding: 9.5px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: auto;
+}
+
+code{
+    max-height: 80vh;
+
+}
+
+.container{
+    display: block;
+}
+
+.content-area{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.column {
+    margin: auto;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.hidden{
+    display: none !important;
+}
+
+#conversion-input{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    margin: auto;
+}
+
+#menu{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: 10px;
+}
+
+#menu label{
+    margin-right: 10px;
+}
