@@ -5,7 +5,7 @@ body{
 
 button{
     width: 100px;
-}
+}   
 
 pre{
     display: block;
@@ -35,6 +35,8 @@ code{
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 65%;
+    margin: auto;
 }
 
 .column {
@@ -47,11 +49,24 @@ code{
     display: none !important;
 }
 
+.center{
+    margin: auto;
+}
+
 #conversion-input{
     display: flex;
     flex-direction: column;
-    width: 50%;
-    margin: auto;
+}
+
+#conversion-output{
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+}
+
+#conversion-input label, #conversion-output label{
+    padding-bottom: 10px;
+    font-weight: 600;
 }
 
 #menu{
@@ -59,6 +74,8 @@ code{
     flex-direction: row;
     justify-content: center;
     margin: 10px;
+    border: 7px solid #00ade3;
+    padding: 10px;
 }
 
 #menu label{

@@ -31,6 +31,7 @@ type alias Model =
     convertTo : String,
     convertFrom : String,
     conversionResult : String,
+    outputField : String,
     radioState : RadioState,
     inputFieldText : String,
     inputFieldTextValue : String,
@@ -45,14 +46,15 @@ init _ =
   ( 
     { content = "",
         convertTo = "json",
-        convertFrom = "",
+        convertFrom = "guess",
         conversionResult = "",
+        outputField = "hidden",
         radioState = URL,
         inputFieldText = "hidden",
         inputFieldTextValue = "",
         inputFieldUrl = "shown",
         inputFieldUrlValue = "",
-        raw = "",
+        raw = "true",
         data = ""
     },
     Cmd.none
@@ -71,6 +73,7 @@ type Msg
   | UpdateTo String
   | GotConversion (Result Http.Error String)
   | UpdateInputFieldTextValue String
+  | UpdateInputFieldUrlValue String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -79,13 +82,19 @@ update msg model =
 
     -- Updates the model with result of easyrdf conversion
     DisplayConversionResult -> 
-      ({ model | content = model.conversionResult }, getConversion model)
+      ({ model | content = model.conversionResult, outputField = "shown"}, getConversion model)
 
     UpdateFrom val ->
       ({ model | convertFrom = val }, Cmd.none)
       
     UpdateTo val ->
       ({ model | convertTo = val }, Cmd.none)
+
+    UpdateInputFieldTextValue val ->
+      ({model | inputFieldTextValue = val}, dlog model)
+
+    UpdateInputFieldUrlValue val ->
+      ({model | inputFieldUrlValue = val}, Cmd.none)
 
     -- Handles the state of the radio buttons, and the associated effects
     RadioMsg state ->
@@ -104,9 +113,6 @@ update msg model =
 
         Err url ->
           ({model | conversionResult = "FAILURE"}, Cmd.none)
-    
-    UpdateInputFieldTextValue val ->
-      ({model | inputFieldTextValue = val}, Cmd.none)
 
 -- SUBSCRIPTIONS
 
@@ -133,7 +139,7 @@ view model =
             label[]
             [
                 text "url",
-                input[type_ "radio", name "input-type", onClick (RadioMsg URL)][]
+                input[type_ "radio", name "input-type", disabled True, onClick (RadioMsg URL)][]
             ],
             label[]
             [ 
@@ -144,7 +150,7 @@ view model =
         ],
         label[]
         [
-          input[class model.inputFieldUrl, placeholder "Input URL"][]
+          input[class model.inputFieldUrl, placeholder "Input URL", value model.inputFieldUrlValue, onInput UpdateInputFieldUrlValue][]
         ],
         label[]
         [
@@ -177,24 +183,24 @@ view model =
       ],
       div[class "row content-area"]
       [
-        div[id "conversion-input", class model.inputFieldText]
+        div[id "conversion-input", class model.inputFieldText, value model.inputFieldTextValue, onInput UpdateInputFieldTextValue]
         [
-          label[]
+          label[class "center", for "input-textarea"]
           [
-              text "Input", 
-              textarea [cols 60, rows 15, placeholder "test", value model.inputFieldTextValue, onInput UpdateInputFieldTextValue] []
-          ]
+              text "Input" 
+          ],
+          textarea [id "input-textarea", cols 60, rows 15, placeholder "test"] []
         ],
-        div[]
+        div[ id "conversion-output", class model.outputField]
         [
-          label[]
+          label[class "center", for "output-textarea"]
           [
-              text "Result", 
-              pre [class "prettyprint"] 
-              [
-                code[id "code"][text model.conversionResult]
-              ]
-          ]
+              text "Result"
+          ],
+          pre [class "prettyprint", id "output-textarea"] 
+            [
+              code[id "code"][text model.conversionResult]
+            ]
         ]
       ]
     ]
@@ -205,21 +211,23 @@ getConversion : Model -> Cmd Msg
 getConversion model =
   Http.request
     { method = "POST"
-    , headers = []
+    , headers = [Http.header "Accept" ("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")]
     , url = "http://10.31.128.87:8080/tool/RDFConverter/easyrdf/converter.php"
-    , body = Http.stringBody "application/x-www-form-urlencoded" (queryBuilder model.inputFieldTextValue model.raw model.convertFrom model.convertTo)
+    , body = Http.stringBody "application/x-www-form-urlencoded" (queryBuilder model.inputFieldTextValue model.inputFieldUrlValue model.raw model.convertFrom model.convertTo)
     , expect = Http.expectString GotConversion
     , timeout = Nothing
     , tracker = Nothing
     }
 
 -- Constructs an http query string
-queryBuilder : String -> String -> String -> String -> String
-queryBuilder input isRaw formatIn formatOut =
-  "data=" ++ input ++ "&raw=" ++ isRaw ++ "&input_format=" ++ formatIn ++ "&output_format=" ++ formatOut
+queryBuilder : String -> String -> String -> String -> String -> String
+queryBuilder input uri isRaw formatIn formatOut =
+  if input /= "" then "data=" ++ input ++ "&raw=" ++ isRaw ++ "&input_format=" ++ formatIn ++ "&output_format=" ++ formatOut
+  else if uri /= "" then "uri=" ++ uri ++ "&raw=" ++ isRaw ++ "&input_format=" ++ formatIn ++ "&output_format=" ++ formatOut
+  else "FAILURE"
 
 -- Prints a message to the console
 dlog : Model -> Cmd Msg
 dlog model =
-  (log (model.convertTo))
+  (log (model.inputFieldTextValue))
   Cmd.none

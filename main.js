@@ -4965,7 +4965,7 @@ var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		{content: '', conversionResult: '', convertFrom: '', convertTo: 'json', data: '', inputFieldText: 'hidden', inputFieldTextValue: '', inputFieldUrl: 'shown', inputFieldUrlValue: '', radioState: author$project$Main$URL, raw: ''},
+		{content: '', conversionResult: '', convertFrom: 'guess', convertTo: 'json', data: '', inputFieldText: 'hidden', inputFieldTextValue: '', inputFieldUrl: 'shown', inputFieldUrlValue: '', outputField: 'hidden', radioState: author$project$Main$URL, raw: 'true'},
 		elm$core$Platform$Cmd$none);
 };
 var elm$core$Platform$Sub$batch = _Platform_batch;
@@ -4973,12 +4973,17 @@ var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var author$project$Main$subscriptions = function (model) {
 	return elm$core$Platform$Sub$none;
 };
+var elm$core$Debug$log = _Debug_log;
+var author$project$Main$dlog = function (model) {
+	return elm$core$Debug$log(model.inputFieldTextValue)(elm$core$Platform$Cmd$none);
+};
 var author$project$Main$GotConversion = function (a) {
 	return {$: 'GotConversion', a: a};
 };
-var author$project$Main$queryBuilder = F4(
-	function (input, isRaw, formatIn, formatOut) {
-		return 'data=' + (input + ('&raw=' + (isRaw + ('&input_format=' + (formatIn + ('&output_format=' + formatOut))))));
+var elm$core$Basics$neq = _Utils_notEqual;
+var author$project$Main$queryBuilder = F5(
+	function (input, uri, isRaw, formatIn, formatOut) {
+		return (input !== '') ? ('data=' + (input + ('&raw=' + (isRaw + ('&input_format=' + (formatIn + ('&output_format=' + formatOut))))))) : ((uri !== '') ? ('uri=' + (uri + ('&raw=' + (isRaw + ('&input_format=' + (formatIn + ('&output_format=' + formatOut))))))) : 'FAILURE');
 	});
 var elm$core$Basics$composeR = F3(
 	function (f, g, x) {
@@ -5601,6 +5606,11 @@ var elm$http$Http$expectString = function (toMsg) {
 		toMsg,
 		elm$http$Http$resolve(elm$core$Result$Ok));
 };
+var elm$http$Http$Header = F2(
+	function (a, b) {
+		return {$: 'Header', a: a, b: b};
+	});
+var elm$http$Http$header = elm$http$Http$Header;
 var elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -5855,9 +5865,12 @@ var author$project$Main$getConversion = function (model) {
 			body: A2(
 				elm$http$Http$stringBody,
 				'application/x-www-form-urlencoded',
-				A4(author$project$Main$queryBuilder, model.inputFieldTextValue, model.raw, model.convertFrom, model.convertTo)),
+				A5(author$project$Main$queryBuilder, model.inputFieldTextValue, model.inputFieldUrlValue, model.raw, model.convertFrom, model.convertTo)),
 			expect: elm$http$Http$expectString(author$project$Main$GotConversion),
-			headers: _List_Nil,
+			headers: _List_fromArray(
+				[
+					A2(elm$http$Http$header, 'Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
+				]),
 			method: 'POST',
 			timeout: elm$core$Maybe$Nothing,
 			tracker: elm$core$Maybe$Nothing,
@@ -5873,7 +5886,7 @@ var author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{content: model.conversionResult}),
+						{content: model.conversionResult, outputField: 'shown'}),
 					author$project$Main$getConversion(model));
 			case 'UpdateFrom':
 				var val = msg.a;
@@ -5888,6 +5901,20 @@ var author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{convertTo: val}),
+					elm$core$Platform$Cmd$none);
+			case 'UpdateInputFieldTextValue':
+				var val = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{inputFieldTextValue: val}),
+					author$project$Main$dlog(model));
+			case 'UpdateInputFieldUrlValue':
+				var val = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{inputFieldUrlValue: val}),
 					elm$core$Platform$Cmd$none);
 			case 'RadioMsg':
 				var state = msg.a;
@@ -5904,7 +5931,7 @@ var author$project$Main$update = F2(
 							{inputFieldText: 'shown', inputFieldUrl: 'hidden', radioState: state}),
 						elm$core$Platform$Cmd$none);
 				}
-			case 'GotConversion':
+			default:
 				var result = msg.a;
 				if (result.$ === 'Ok') {
 					var url = result.a;
@@ -5923,13 +5950,6 @@ var author$project$Main$update = F2(
 							{conversionResult: 'FAILURE'}),
 						elm$core$Platform$Cmd$none);
 				}
-			default:
-				var val = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{inputFieldTextValue: val}),
-					elm$core$Platform$Cmd$none);
 		}
 	});
 var author$project$Main$DisplayConversionResult = {$: 'DisplayConversionResult'};
@@ -5942,6 +5962,9 @@ var author$project$Main$UpdateFrom = function (a) {
 };
 var author$project$Main$UpdateInputFieldTextValue = function (a) {
 	return {$: 'UpdateInputFieldTextValue', a: a};
+};
+var author$project$Main$UpdateInputFieldUrlValue = function (a) {
+	return {$: 'UpdateInputFieldUrlValue', a: a};
 };
 var author$project$Main$UpdateTo = function (a) {
 	return {$: 'UpdateTo', a: a};
@@ -5987,6 +6010,16 @@ var elm$html$Html$Attributes$cols = function (n) {
 		'cols',
 		elm$core$String$fromInt(n));
 };
+var elm$json$Json$Encode$bool = _Json_wrap;
+var elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$bool(bool));
+	});
+var elm$html$Html$Attributes$disabled = elm$html$Html$Attributes$boolProperty('disabled');
+var elm$html$Html$Attributes$for = elm$html$Html$Attributes$stringProperty('htmlFor');
 var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
 var elm$html$Html$Attributes$name = elm$html$Html$Attributes$stringProperty('name');
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
@@ -6096,6 +6129,7 @@ var author$project$Main$view = function (model) {
 															[
 																elm$html$Html$Attributes$type_('radio'),
 																elm$html$Html$Attributes$name('input-type'),
+																elm$html$Html$Attributes$disabled(true),
 																elm$html$Html$Events$onClick(
 																author$project$Main$RadioMsg(author$project$Main$URL))
 															]),
@@ -6130,7 +6164,9 @@ var author$project$Main$view = function (model) {
 										_List_fromArray(
 											[
 												elm$html$Html$Attributes$class(model.inputFieldUrl),
-												elm$html$Html$Attributes$placeholder('Input URL')
+												elm$html$Html$Attributes$placeholder('Input URL'),
+												elm$html$Html$Attributes$value(model.inputFieldUrlValue),
+												elm$html$Html$Events$onInput(author$project$Main$UpdateInputFieldUrlValue)
 											]),
 										_List_Nil)
 									])),
@@ -6327,58 +6363,72 @@ var author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										elm$html$Html$Attributes$id('conversion-input'),
-										elm$html$Html$Attributes$class(model.inputFieldText)
+										elm$html$Html$Attributes$class(model.inputFieldText),
+										elm$html$Html$Attributes$value(model.inputFieldTextValue),
+										elm$html$Html$Events$onInput(author$project$Main$UpdateInputFieldTextValue)
 									]),
 								_List_fromArray(
 									[
 										A2(
 										elm$html$Html$label,
-										_List_Nil,
 										_List_fromArray(
 											[
-												elm$html$Html$text('Input'),
-												A2(
-												elm$html$Html$textarea,
-												_List_fromArray(
-													[
-														elm$html$Html$Attributes$cols(60),
-														elm$html$Html$Attributes$rows(15),
-														elm$html$Html$Attributes$placeholder('test'),
-														elm$html$Html$Attributes$value(model.inputFieldTextValue),
-														elm$html$Html$Events$onInput(author$project$Main$UpdateInputFieldTextValue)
-													]),
-												_List_Nil)
-											]))
+												elm$html$Html$Attributes$class('center'),
+												elm$html$Html$Attributes$for('input-textarea')
+											]),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Input')
+											])),
+										A2(
+										elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$id('input-textarea'),
+												elm$html$Html$Attributes$cols(60),
+												elm$html$Html$Attributes$rows(15),
+												elm$html$Html$Attributes$placeholder('test')
+											]),
+										_List_Nil)
 									])),
 								A2(
 								elm$html$Html$div,
-								_List_Nil,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$id('conversion-output'),
+										elm$html$Html$Attributes$class(model.outputField)
+									]),
 								_List_fromArray(
 									[
 										A2(
 										elm$html$Html$label,
-										_List_Nil,
 										_List_fromArray(
 											[
-												elm$html$Html$text('Result'),
+												elm$html$Html$Attributes$class('center'),
+												elm$html$Html$Attributes$for('output-textarea')
+											]),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Result')
+											])),
+										A2(
+										elm$html$Html$pre,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$class('prettyprint'),
+												elm$html$Html$Attributes$id('output-textarea')
+											]),
+										_List_fromArray(
+											[
 												A2(
-												elm$html$Html$pre,
+												elm$html$Html$code,
 												_List_fromArray(
 													[
-														elm$html$Html$Attributes$class('prettyprint')
+														elm$html$Html$Attributes$id('code')
 													]),
 												_List_fromArray(
 													[
-														A2(
-														elm$html$Html$code,
-														_List_fromArray(
-															[
-																elm$html$Html$Attributes$id('code')
-															]),
-														_List_fromArray(
-															[
-																elm$html$Html$text(model.conversionResult)
-															]))
+														elm$html$Html$text(model.conversionResult)
 													]))
 											]))
 									]))
