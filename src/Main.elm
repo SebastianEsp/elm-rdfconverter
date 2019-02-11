@@ -108,7 +108,7 @@ update msg model =
     GotConversion result ->
       case result of
         Ok url ->
-          if model.convertTo == "json" then (model, prettify url)
+          if model.convertTo == "json" || model.convertTo == "jsonld" then (model, prettify url) --If in json format send to JS for formatting
           else ({model | conversionResult = url}, Cmd.none)
 
         Err url ->
@@ -176,7 +176,8 @@ view model =
               option[onClick (UpdateTo "php")][text "RDF/PHP"],
               option[onClick (UpdateTo "turtle")][text "Turtle"],
               option[onClick (UpdateTo "ntriples")][text "N-Triples"],
-              option[onClick (UpdateTo "jsonld")][text "JSON-LD"]
+              option[onClick (UpdateTo "jsonld")][text "JSON-LD"],
+              option[onClick (UpdateTo "dot")][text "Graphviz"]
             ]
         ],
         button [onClick DisplayConversionResult] [text "Convert"]

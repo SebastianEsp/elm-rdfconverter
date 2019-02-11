@@ -5935,7 +5935,7 @@ var author$project$Main$update = F2(
 				var result = msg.a;
 				if (result.$ === 'Ok') {
 					var url = result.a;
-					return (model.convertTo === 'json') ? _Utils_Tuple2(
+					return ((model.convertTo === 'json') || (model.convertTo === 'jsonld')) ? _Utils_Tuple2(
 						model,
 						author$project$Main$prettify(url)) : _Utils_Tuple2(
 						_Utils_update(
@@ -6336,6 +6336,17 @@ var author$project$Main$view = function (model) {
 												_List_fromArray(
 													[
 														elm$html$Html$text('JSON-LD')
+													])),
+												A2(
+												elm$html$Html$option,
+												_List_fromArray(
+													[
+														elm$html$Html$Events$onClick(
+														author$project$Main$UpdateTo('dot'))
+													]),
+												_List_fromArray(
+													[
+														elm$html$Html$text('Graphviz')
 													]))
 											]))
 									])),
